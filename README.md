@@ -1,4 +1,4 @@
-# Cpcdos OS2.1 co-kernel source code.
+# Cpcdos OS2.1/protonNT co-kernel source code.
 
 ![](https://cpcdos.net/user/themes/cpcdos/images/logo.png)
 
@@ -60,7 +60,7 @@ Join the [Cpcdos discord](https://discord.com/invite/3Qm8xDp)
  - 04Kylian - FireFlyOS
  - Nadir - MineOSX
  - PokeCraft - LeviathanOS
- - iplux - MaverickOS
+ - iplux - protonOS
  - FicelleYTB
  - Climax
  - D3nX
