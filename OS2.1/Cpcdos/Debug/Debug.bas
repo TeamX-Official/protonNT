@@ -14,7 +14,7 @@
 #print
 #print ============ DEBUG ==============
 
-#include once "Cpcdos.bi"
+#include once "cpcdos.bi"
 
 Constructor _DEBUG_Cpcdos_OSx__()
 	' Le debug ne peut pas etre utilise car le noyau n'es pas encore initialise	
@@ -292,6 +292,7 @@ SUB DEBUG(Evenement as string, Ecran as integer, DansLeLOG as integer, Prio as i
 	
 	' Si en mode graphique, on affiche rien
 	if CPCDOS_INSTANCE.SCI_INSTANCE.GUI_Exec = TRUE AND CPCDOS_INSTANCE.SCI_INSTANCE.GUI_Mode = TRUE THEN Exit sub
+	if CPCDOS_INSTANCE.SCI_INSTANCE.IMGUI_mode = true Then Exit sub
 	
 	IF Ecran = 1 then
 			' rem Mode console pur

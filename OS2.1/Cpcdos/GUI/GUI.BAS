@@ -16,9 +16,78 @@
 ' 19-05-2017	: Readaptation du PNG et le picturebox
 
 
-#include once "Cpcdos.bi"
+#include once "cpcdos.bi"
 
 #print * Initaliser GUI
+
+
+Function _SCI_Cpcdos_OSx__.Initialiser_GUI__ImGUI(Arg1 as integer, RetourVAR_ as String, _CLE_ as double) as integer
+
+
+	ENTRER_SectionCritique()
+	
+	Dim Test_Resolution 	as Integer
+	Dim var_SCR_BIT 		as integer
+	Dim tmpKernelID			as uinteger
+	Dim tmpOSID				as uinteger
+	Dim tmpTID				as uinteger
+	Dim tmpPID	 			as uinteger
+	dim tmpUSERID			as uinteger
+	
+	Dim var_SCR_RES 		as string
+	
+	
+	this.RetourVAR = RetourVAR_
+	
+	tmpKernelID = CPCDOS_INSTANCE.get_id_kernel(_CLE_)
+	tmpOSID 	= CPCDOS_INSTANCE.get_id_OS(_CLE_)
+	tmpTID 		= CPCDOS_INSTANCE.get_id_TID(_CLE_)
+	tmpPID 		= CPCDOS_INSTANCE.get_id_PID(_CLE_)
+	tmpUSERID 	= CPCDOS_INSTANCE.get_id_Utilisateur(_CLE_)
+	
+	this._CLE_ = _CLE_
+	
+	
+	' Definit le nouvel ID os depuis la CLE
+	set_OSid(tmpOSID)
+	
+	' Valider l'execution depuis ID os
+	CPCDOS_INSTANCE.SCI_INSTANCE.GUI_Exec_os(tmpOSID) = True
+	
+	IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
+		DEBUG("[GUI] Initialisation de la GUI [OS:" & tmpOSID & " 0x" & hex(_CLE_, 8) & "].", CPCDOS_INSTANCE.DEBUG_INSTANCE.Ecran, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ACTION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, "")
+	Else
+		DEBUG("[GUI] GUI Initialisation [OS:" & tmpOSID & " 0x" & hex(_CLE_, 8) & "].", CPCDOS_INSTANCE.DEBUG_INSTANCE.Ecran, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, "")
+	End if
+	
+	' Recupere la resolution dans les variables utilisateurs
+	var_SCR_RES	= UCASE(CPCDOS_INSTANCE.SHELLCCP_INSTANCE.CCP_Lire_Variable("SCR_RES", 4, _CLE_))
+	var_SCR_BIT	= Val(CPCDOS_INSTANCE.SHELLCCP_INSTANCE.CCP_Lire_Variable("SCR_BIT", 4, _CLE_))
+	
+	
+	DEBUG("[GUI] " & var_SCR_RES & " " & var_SCR_BIT & " bits", CPCDOS_INSTANCE.DEBUG_INSTANCE.Ecran, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ACTION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.SansDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, "")
+	
+	' Tester et initialiser la resolution d'ecran
+	Test_Resolution = Initialiser_ECRAN(var_SCR_RES, var_SCR_BIT)
+
+	CPCDOS_INSTANCE.SCI_INSTANCE.GUI_Mode = FALSE
+	CPCDOS_INSTANCE.SCI_INSTANCE.GUI_Exec = false
+
+	
+
+
+	DEBUG("[GUI] Return " & Test_Resolution, CPCDOS_INSTANCE.DEBUG_INSTANCE.Ecran, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_OK, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.SansDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, "")
+	
+	if Test_Resolution > 0 Then
+		CPCDOS_INSTANCE.SHELLCCP_INSTANCE.CpcdosCP_SHELL("@#ImGUI__Thread cmd/ /thread[MAX] exe/ /Win32 tests/imgui.exe", _CLE_, 4, 0, "")
+		Dim ImGUI__Thread as integer = val(CPCDOS_INSTANCE.SHELLCCP_INSTANCE.CCP_Lire_Variable("ImGUI__Thread", 4, _CLE_))
+	End if
+
+	return Test_Resolution
+
+End function
+
+
 Function _SCI_Cpcdos_OSx__.Initialiser_GUI(Arg1 as integer, RetourVAR_ as String, _CLE_ as double) as integer
 	' Cette fonction va permettre d'initialiser l'interface graphique
 	' Declarer les variables
@@ -382,7 +451,7 @@ Function _SCI_Cpcdos_OSx__.CPC__GUI_Init_obj(Type_De_GUI as Integer, _Proprietes
 
 		' Sil y a une taskbar
 		if CPCDOS_INSTANCE.SCI_INSTANCE.TaskBar_List_win > 0 Then
-			if NOT CPCDOS_INSTANCE.SCI_INSTANCE.TaskBar_List_win = _INDEX_ Then ' Et que c'est pas elle même
+			if NOT CPCDOS_INSTANCE.SCI_INSTANCE.TaskBar_List_win = _INDEX_ Then ' Et que c'est pas elle mï¿½me
 				' On actualise le contenu de la taskbar
 				ActualiserGUI(1, CPCDOS_INSTANCE.SCI_INSTANCE.TaskBar_List_win)
 
@@ -2457,9 +2526,9 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 
 									' Ajouter MOUSE_ENTER --> Lors ce que la souris ENTRE dans l'objet
 									' Ajouter quand on relache le bouton du clic
-									' Ajouter quand on entre en restant CLIQUé
-									' Ajouter quand sort en restant CLIQUé
-									' Ajouter quand on est dedans et le bouton relaché
+									' Ajouter quand on entre en restant CLIQUï¿½
+									' Ajouter quand sort en restant CLIQUï¿½
+									' Ajouter quand on est dedans et le bouton relachï¿½
 									
 									Fichier_evenement  	= this.INST_INIT_GUI.GUI__PICTUREBOX(The_Objet_index).PROP_TYPE.Fichier_evenement
 									
@@ -3043,7 +3112,7 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 											Creer_TextBox(The_Objet_index, _INDEX_FENETRE_)
 											
 											
-											' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezé car pas fichier events
+											' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezï¿½ car pas fichier events
 											if NOT Fichier_evenement = "" Then
 												IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.EV_Click = True Then
 													' Si l'utilisateur clique (bouton enfonce) avec nimporte quel bouton de la souris (Click) ou (Click(Valeur))
@@ -3098,7 +3167,7 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 												' Actualiser graphiquement le bouton pour l'effet de "pression"
 												Creer_TextBox(The_Objet_index, _INDEX_FENETRE_)
 												
-												' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezé car pas fichier events
+												' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezï¿½ car pas fichier events
 												if NOT Fichier_evenement = "" Then
 													IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.EV_MouseClick = True Then
 														' Si l'utilisateur clique (bouton relache) avec nimporte quel bouton de la souris (MouseClick) ou (Click(Valeur))
@@ -3138,7 +3207,7 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 											IF NOT this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.Fichier_evenement = "" Then
 												IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.Survole = FALSE Then
 												
-													' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezé car pas fichier events
+													' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezï¿½ car pas fichier events
 													if NOT Fichier_evenement = "" Then
 														IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.EV_MouseEnter = True Then
 															if NOT instr(CPCDOS_INSTANCE.SCI_INSTANCE.Event_Liste_Noire, Fichier_evenement & "->" & Nom_Objet & ":MouseEnter()") > 0 Then
@@ -3175,7 +3244,7 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 											
 											IF NOT this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.Fichier_evenement = "" Then
 												
-												' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezé car pas fichier events
+												' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezï¿½ car pas fichier events
 												if NOT Fichier_evenement = "" Then
 													IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.EV_MouseMove = True Then
 														if NOT instr(CPCDOS_INSTANCE.SCI_INSTANCE.Event_Liste_Noire, Fichier_evenement & "->" & Nom_Objet & ":MouseMove()") > 0 Then
@@ -3215,7 +3284,7 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 										' Actualiser graphiquement le bouton pour l'effet de "pression"
 										Creer_TextBox(The_Objet_index, _INDEX_FENETRE_)
 								
-										' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezé car pas fichier events
+										' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezï¿½ car pas fichier events
 										if NOT Fichier_evenement = "" Then
 											IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.EV_MouseClick = True Then
 												' Si l'utilisateur clique (bouton relache) avec nimporte quel bouton de la souris (MouseClick) ou (Click(Valeur))
@@ -3254,7 +3323,7 @@ Function _SCI_Cpcdos_OSx__.Interaction_SOURIS_FENETRE(Pos_X as integer, Pos_Y as
 									IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.Survole = TRUE Then
 										this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.Survole = False
 										
-										' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezé car pas fichier events
+										' CORRECTION 03/12/2019 : Cette ligne est ici sinon textebox Freezï¿½ car pas fichier events
 										if NOT Fichier_evenement = "" Then
 											IF this.INST_INIT_GUI.GUI__TEXTBOX(The_Objet_index).PROP_TYPE.EV_MouseLeave = True Then
 												' Si la souris de l'utilisateur sort de l'objet (MouseLeave)

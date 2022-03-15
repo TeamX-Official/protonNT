@@ -77,7 +77,7 @@
 ' 14-02-2017	: Finalisation des commandes SERVEUR/ et CLIENT/
 
 
-#include "Cpcdos.bi"
+#include "cpcdos.bi"
 
 
 #define _scope do
@@ -478,10 +478,10 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 							' EFFECTUER UN COLLER
 							Dim position_curseur as integer = CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__TEXTBOX(INDEX_Textbox).PROP_TYPE.UserEdit_Pos
 
-							' Placer le texte où est positionné le curseur
+							' Placer le texte oï¿½ est positionnï¿½ le curseur
 							Dim Traitement as string = mid(CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__TEXTBOX(INDEX_Textbox).Texte, 1, position_curseur) & CPCDOS_INSTANCE.__PRESSE_PAPIER_TEXTE__
 							
-							' Positionner apres le texte collé
+							' Positionner apres le texte collï¿½
 							CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__TEXTBOX(INDEX_Textbox).PROP_TYPE.UserEdit_Pos = len(Traitement)
 
 							' Completer la fin du texte
@@ -2326,6 +2326,13 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 			TXT_Date 	= CPCDOS_INSTANCE.DEBUG_INSTANCE.SansDate
 			TXT_Couleur = CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_Normal
 
+			IF Instr(UCASE(Param), "/#ENCRYPT") > 0 Then
+				Param = MID(Param, 1, Instr(UCASE(Param), "/#ENCRYPT") - 1) 
+
+				' Encrypt message
+				Param = CPCDOS_INSTANCE.encrypt_message(Param)
+			End if
+
 			IF Instr(UCASE(Param), "/#R") > 0 Then
 				Param = MID(Param, 1, Instr(UCASE(Param), "/#R") - 1) ' /#R pour que le texte reste sur la ligne
 				TXT_CRLF = CPCDOS_INSTANCE.DEBUG_INSTANCE.NoCRLF
@@ -3603,6 +3610,8 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 					DEBUG("[CpcdosC+] Launching graphic interface (OSid:" & NumeroOS & ") ...", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_Normal, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
 				End if
 			END IF
+
+			
 			
 			IF instr(ucase(Param), "/MULTI-PICTUREBOX") > 0 Then
 				CPCDOS_INSTANCE.SCI_INSTANCE.MULTI_PICTUREBOX = 1
@@ -3699,6 +3708,10 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 				exit _scope_CMD, _scope
 			End if
 
+			IF instr(ucase(Param), "/IMGUI") > 0 Then
+				CPCDOS_INSTANCE.SCI_INSTANCE.IMGUI_mode = true
+			end if
+
 			
 			IF instr(ucase(Param), "/OS") > 0 Then
 				Dim NomOS as String = Mid(Ucase(Param), instr(ucase(Param), "/OS") + 4)
@@ -3765,22 +3778,41 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 				End if
 			else
 			
-				if CPCDOS_INSTANCE.SCI_INSTANCE.Initialiser_GUI(0, RetourVAR, _CLE_) = 1 then
-					IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
-						DEBUG("[CpcdosC+] Interface graphique initialise!", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_VALIDATION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
-					Else
-						DEBUG("[CpcdosC+] Graphic interface initialised!", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_VALIDATION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
+				if CPCDOS_INSTANCE.SCI_INSTANCE.IMGUI_mode = true Then
+					if CPCDOS_INSTANCE.SCI_INSTANCE.Initialiser_GUI__ImGUI(0, RetourVAR, _CLE_) = 1 then
+						IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
+							DEBUG("[CpcdosC+] Interface graphique ImGUI initialise!", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_VALIDATION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
+						Else
+							DEBUG("[CpcdosC+] ImGUI graphic interface initialised!", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_VALIDATION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
+						End if
+					else
+
+						Message_erreur = ERRAVT("ERR_049", 0)
+						IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
+							DEBUG("[CpcdosC+] ERR_049: " & Message_erreur & ". Erreur d'initialisation de ImGUI", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, RetourVAR)
+						Else
+							DEBUG("[CpcdosC+] ERR_049: " & Message_erreur & ". Unable to initialise the ImGUI", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, RetourVAR)
+						End if
 					End if
-					
-					
 				else
-					Message_erreur = ERRAVT("ERR_049", 0)
-					IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
-						DEBUG("[CpcdosC+] ERR_049: " & Message_erreur & ". Erreur d'initialisation de l'IUG", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, RetourVAR)
-					Else
-						DEBUG("[CpcdosC+] ERR_049: " & Message_erreur & ". Unable to initialise the GUI", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, RetourVAR)
-					End if
-				end if
+
+					if CPCDOS_INSTANCE.SCI_INSTANCE.Initialiser_GUI(0, RetourVAR, _CLE_) = 1 then
+						IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
+							DEBUG("[CpcdosC+] Interface graphique initialise!", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_VALIDATION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
+						Else
+							DEBUG("[CpcdosC+] Graphic interface initialised!", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_VALIDATION, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_CPCDOS, RetourVAR)
+						End if
+						
+						
+					else
+						Message_erreur = ERRAVT("ERR_049", 0)
+						IF CPCDOS_INSTANCE.Utilisateur_Langage = 0 Then
+							DEBUG("[CpcdosC+] ERR_049: " & Message_erreur & ". Erreur d'initialisation de l'IUG", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, RetourVAR)
+						Else
+							DEBUG("[CpcdosC+] ERR_049: " & Message_erreur & ". Unable to initialise the GUI", Affichage, CPCDOS_INSTANCE.DEBUG_INSTANCE.NonLog, CPCDOS_INSTANCE.DEBUG_INSTANCE.Couleur_ERREUR, 0, CPCDOS_INSTANCE.DEBUG_INSTANCE.CRLF, CPCDOS_INSTANCE.DEBUG_INSTANCE.AvecDate, CPCDOS_INSTANCE.DEBUG_INSTANCE.SIGN_AFF, RetourVAR)
+						End if
+					end if
+				End if
 			End if ' Si numero OS < 0
 
 			' ====================================================================
@@ -4643,7 +4675,7 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 							' Avec son index
 							CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__FENETRE(_INDEX_FENETRE_).OBJET_FOCUS_INDEX = INDEX_Textbox
 
-							' Dernière position
+							' Derniï¿½re position
 							CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__TEXTBOX(INDEX_Textbox).PROP_TYPE.UserEdit_Pos = Len(CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__TEXTBOX(INDEX_Textbox).Texte)
 						
 
@@ -12857,7 +12889,32 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 						
 						CpcdosCP_SHELL("SET/ _EXE_PATH_ = " & Param, Nouvelle_Cle, 2, Param_1, Param_2)
 						
-						CpcdosCP_SHELL("SET/ _EXE_PATH_DIR_ = " & Mid(Param, 1, INSTRREV(Param, "\") - 1), Nouvelle_Cle, 2, Param_1, Param_2)
+						dim exe_path_dir_tmp as string 
+						if INSTRREV(Param, "\") > 0 then
+							if INSTRREV(Param, "/") > 0 Then
+								if INSTRREV(Param, "/") > INSTRREV(Param, "\") Then ' Si / et \ son present sur la meme ligne
+									exe_path_dir_tmp = Mid(Param, 1, INSTRREV(Param, "/") - 1) ' S'arreter avant le dernier /
+								elseif INSTRREV(Param, "/") < INSTRREV(Param, "\") Then
+									exe_path_dir_tmp = Mid(Param, 1, INSTRREV(Param, "\") - 1) ' S'arreter avant le dernier \
+								End if
+							else
+								exe_path_dir_tmp = Mid(Param, 1, INSTRREV(Param, "\") - 1) ' S'arreter avant le dernier \
+							End if
+						elseif INSTRREV(Param, "/") > 0 then
+
+							if INSTRREV(Param, "/") > 0 Then
+								if INSTRREV(Param, "/") > INSTRREV(Param, "\") Then ' Si / et \ son present sur la meme ligne
+									exe_path_dir_tmp = Mid(Param, 1, INSTRREV(Param, "/") - 1) ' S'arreter avant le dernier /
+								elseif INSTRREV(Param, "/") < INSTRREV(Param, "\") Then
+									exe_path_dir_tmp = Mid(Param, 1, INSTRREV(Param, "\") - 1) ' S'arreter avant le dernier \
+								End if
+							else
+								exe_path_dir_tmp = Mid(Param, 1, INSTRREV(Param, "/") - 1) ' S'arreter avant le dernier /
+							End if
+
+						end if
+
+						CpcdosCP_SHELL("SET/ _EXE_PATH_DIR_ = " & exe_path_dir_tmp, Nouvelle_Cle, 2, Param_1, Param_2)
 						
 						CpcdosCP_SHELL("SET/ _EXE_PID_ = " & Auth_PID , Nouvelle_Cle, 2, Param_1, Param_2)
 						
@@ -13074,6 +13131,7 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 						DIM GUI__PROP_CONTENEUR_COMPLET as boolean 	= false
 						DIM GUI__PROP_ALPHA_MODE 		as integer	= 0
 						DIM GUI__PROP_BLURRY_MODE		as integer 	= 0
+						Dim GUI__PROP_SURBRILLE			as integer 	= 0
 						
 						DIM GUI__PROP_FOND_COULEUR		as boolean = TRUE
 
@@ -14045,6 +14103,7 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 															
 															GUI__PROP_ALPHA_MODE	= CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__FENETRE(_INDEX_FENETRE_).Alpha_Mode
 															GUI__PROP_BLURRY_MODE	= CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__FENETRE(_INDEX_FENETRE_).PROP_TYPE.Blurry_Mode
+
 															
 															GUI__PROP_IMGTITRE 		= CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__FENETRE(_INDEX_FENETRE_).IMG_TITRE
 															
@@ -14612,6 +14671,7 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 
 															GUI__PROP_BLURRY_MODE	= CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__PICTUREBOX(_INDEX_PICTUREBOX_).PROP_TYPE.Blurry_Mode
 															
+															GUI__PROP_SURBRILLE 	= CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__PICTUREBOX(_INDEX_PICTUREBOX_).PROP_TYPE.Surbrillance
 															
 															' Couleur de la fenetre en general  ===> GUI__PROP_COULEURFENETRE
 															IF CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.GUI__PICTUREBOX(_INDEX_PICTUREBOX_).PROP_TYPE.Couleur_FNT_R < 1 Then
@@ -16114,6 +16174,8 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 												IF INSTR(GUI__PROP_TYPE, "BLURRY:7") > 0 Then GUI__PROP_BLURRY_MODE = 7
 												IF INSTR(GUI__PROP_TYPE, "BLURRY:8") > 0 Then GUI__PROP_BLURRY_MODE = 8
 												IF INSTR(GUI__PROP_TYPE, "BLURRY:9") > 0 Then GUI__PROP_BLURRY_MODE = 9
+
+												IF INSTR(GUI__PROP_TYPE, "SURBRILLE:") > 0 Then GUI__PROP_SURBRILLE = VAL(MID(GUI__PROP_TYPE, INSTR(GUI__PROP_TYPE, "SURBRILLE:") + 10, 3))
 												
 												IF INSTR(GUI__PROP_TYPE, "COL:0") > 0 Then GUI__PROP_FOND_COULEUR = FALSE
 												IF INSTR(GUI__PROP_TYPE, "COL:1") > 0 Then GUI__PROP_FOND_COULEUR = TRUE
@@ -16791,6 +16853,8 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 												CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.TEMP_GUI__PICTUREBOX.PROP_TYPE.AutoSizeIMG = GUI__PROP_AUTOSIZE
 
 												CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.TEMP_GUI__PICTUREBOX.PROP_TYPE.Blurry_Mode = GUI__PROP_BLURRY_MODE
+
+												CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.TEMP_GUI__PICTUREBOX.PROP_TYPE.Surbrillance = GUI__PROP_SURBRILLE
 
 												' Couleur du picturebox ===> GUI__PROP_COULEURFOND
 												CPCDOS_INSTANCE.SCI_INSTANCE.INST_INIT_GUI.TEMP_GUI__PICTUREBOX.PROP_TYPE.Couleur_CTN_R = val(Mid(GUI__PROP_COULEURFOND, 1, 3))
@@ -17725,14 +17789,15 @@ Function _SHELL_Cpcdos_OSx__.CpcdosCP_SHELL(ByVal _COMMANDE_ as String, byval _C
 											IUG_CREATION_EXPLORER 		= ""
 											IUG_CREATION_LISTBOX 		= ""
 											
-											GUI__PROP_VALEUR = 0
+											GUI__PROP_VALEUR 			= 0
 											
 											GUI__PROP_CONTENEUR_COMPLET = false
-											GUI__PROP_ALPHA_MODE = 0
-											GUI__PROP_BLURRY_MODE = 0
-											Modification_IUG = false
-											GUI__PROP_TYPE_OBJ = 0
-											GUI__PROP_TYPE_DESKTOPMODE = false
+											GUI__PROP_ALPHA_MODE 		= 0
+											GUI__PROP_BLURRY_MODE 		= 0
+											GUI__PROP_SURBRILLE 		= 0
+											Modification_IUG 			= false
+											GUI__PROP_TYPE_OBJ 			= 0
+											GUI__PROP_TYPE_DESKTOPMODE 	= false
 											GUI__PROP_DEPLACABLE		= true
 											GUI__PROP_REDUCTABLE		= true
 											GUI__PROP_SIZEABLE			= true
@@ -19851,7 +19916,7 @@ _FIN_EXE_CCP_EXE:
 						' Indiquer que c'est une fenetre qu'on veut supprimer
 						TypeObjet = CPCDOS_INSTANCE.SCI_INSTANCE.GUI_TYPE.Fenetre
 
-						' Si c'est une fenêtre desktop, on delete!
+						' Si c'est une fenï¿½tre desktop, on delete!
 						if CPCDOS_INSTANCE.SCI_INSTANCE.DESKTOPMODE_Index_Fenetre = boucle Then
 							CPCDOS_INSTANCE.SCI_INSTANCE.DESKTOPMODE_Index_Fenetre = 0
 						End if
@@ -20027,7 +20092,7 @@ _FIN_EXE_CCP_EXE:
 							' Indiquer que c'est une fenetre qu'on veut supprimer
 							TypeObjet = CPCDOS_INSTANCE.SCI_INSTANCE.GUI_TYPE.Fenetre
 
-							' Si c'est une fenêtre desktop, on delete!
+							' Si c'est une fenï¿½tre desktop, on delete!
 							if CPCDOS_INSTANCE.SCI_INSTANCE.DESKTOPMODE_Index_Fenetre = boucle Then
 								CPCDOS_INSTANCE.SCI_INSTANCE.DESKTOPMODE_Index_Fenetre = 0
 							End if
@@ -20425,7 +20490,7 @@ _FIN_EXE_CCP_EXE:
 					Mess_Aide = Mess_Aide & CRLF & "     sys/ /listvar 5"
 					Mess_Aide = Mess_Aide & CRLF
 					Mess_Aide = Mess_Aide & CRLF
-					Mess_Aide = Mess_Aide & CRLF & "   Charger/recharger les propriétés du curseur graphique"
+					Mess_Aide = Mess_Aide & CRLF & "   Charger/recharger les propriï¿½tï¿½s du curseur graphique"
 					Mess_Aide = Mess_Aide & CRLF & "     sys/ /load-cursor-properties"
 					Mess_Aide = Mess_Aide & CRLF
 					Mess_Aide = Mess_Aide & CRLF & "   Charger/recharger les icones des curseurs graphiques"
@@ -20620,7 +20685,7 @@ _FIN_EXE_CCP_EXE:
 					Mess_Aide = Mess_Aide & CRLF & "     sys/ /listvar 4"
 					Mess_Aide = Mess_Aide & CRLF
 					Mess_Aide = Mess_Aide & CRLF
-					Mess_Aide = Mess_Aide & CRLF & "   Charger/recharger les propriétés du curseur graphique"
+					Mess_Aide = Mess_Aide & CRLF & "   Charger/recharger les propriï¿½tï¿½s du curseur graphique"
 					Mess_Aide = Mess_Aide & CRLF & "     sys/ /load-cursor-properties"
 					Mess_Aide = Mess_Aide & CRLF
 					Mess_Aide = Mess_Aide & CRLF & "   Charger/recharger les icones des curseurs graphiques"
@@ -21112,10 +21177,10 @@ _FIN_EXE_CCP_EXE:
 			IF Instr(UCASE(Param), "/FONT") > 0 Then
 
 				IF Instr(UCASE(Param), "/WRITE") > 0 Then
-					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "Hello i'm Arial font", 12, "arial", 10, 10, 255, 255, 255)
-					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "In italic !", 12, "ariali", 10, 30, 255, 255, 255)
-					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "In comic sans ms BOLD!", 12, "comicbd", 10, 50, 255, 255, 255)
-					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "And in IMPACT Tadaaaa !", 12, "impact", 10, 70, 255, 255, 255)
+					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "Hello i'm Arial font", 8, "arial", 10, 10, 255, 255, 255)
+					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "In italic !", 8, "ariali", 10, 30, 255, 255, 255)
+					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "In comic sans ms BOLD!", 8, "comicbd", 10, 50, 255, 255, 255)
+					CPCDOS_INSTANCE.SYSTEME_INSTANCE.Memoire_MAP.Ecrire_ecran_font(0, "And in IMPACT Tadaaaa !", 8, "impact", 10, 70, 255, 255, 255)
 				End if
 
 				' Convertir les fichiers TTF en PNG		
